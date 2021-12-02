@@ -10,12 +10,12 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--id', metavar='1', type=int, nargs=1,
                     help='id of map', default=1)
-parser.add_argument('--real_map', metavar='1', type=str, nargs=1,
+parser.add_argument('--mask', metavar='1', type=str, nargs=1,
                     help='id of map', default=1)
 
 args = parser.parse_args()
 i = args.id[0]
-names_sim = args.real_map[0]
+names_sim = args.mask[0]
 
 print('Load data')
 
@@ -49,4 +49,3 @@ print(radius, end - start)
 appended_data = pd.concat(appended_data)
 # ONLY use pickle for correct formating
 appended_data.to_pickle(path_store+'SimulatedMaps/'+names_sim+'/sim_map_'+str(i)+'.csv')
-
