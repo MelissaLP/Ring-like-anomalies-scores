@@ -47,18 +47,18 @@ def getting_mask(input_filename, tmask):
 
 def define_grid(types, width):
     # Define the grid of the map
-    step = 80
+    step1 = 80
+    step2 = 160
     epsilon = 0.0025
 
-    P = np.arange(-np.pi, np.pi, 2*np.pi/step)
+    P = np.arange(-np.pi, np.pi, 2*np.pi/step1)
     
     if types == 'full':
-        T=np.concatenate((np.arange(np.pi/9,np.pi/2,7*np.pi/(18*step)),
-                          np.arange(-np.pi/2,-np.pi/9,7*np.pi/(18*step))))
-        
+        T=np.concatenate((np.arange(np.pi/9,np.pi/2,7*np.pi/(18*step1)),
+                          np.arange(-np.pi/2,-np.pi/9,7*np.pi/(18*step1))))
     else:
-        T = np.concatenate((np.arange(0, np.pi/2, 7*np.pi/(18*step)),
-                            np.arange(-np.pi/2, 0, 7*np.pi/(18*step))))
+        T = np.concatenate((np.arange(0, np.pi/2, 7*np.pi/(18*step2)),
+                            np.arange(-np.pi/2, 0, 7*np.pi/(18*step2))))
 
     # And the size of the rings
 
@@ -75,9 +75,10 @@ def define_grid(types, width):
 def define_mask(cleaning, N):
 
     if cleaning == 'full':
+        d= -0.36433748135382116
         mask = np.zeros(hp.nside2npix(N), dtype=bool)
         pixel_theta, pixel_phi = hp.pix2ang(N, np.arange(hp.nside2npix(N)))
-        mask[(pixel_theta > np.pi/9) & (pixel_theta < np.pi-np.pi/9)] = 1
+        mask[(pixel_theta > d+1.5) & (pixel_theta < 0.7134033317526871+d+1.5)] = 1
     else:
         path_to_mask = '/data/gravwav/lopezm/MasterThesis/RealData/'
         mask = getting_mask(path_to_mask+'COM_CMB_IQU-'+str(cleaning)+'_1024_R2.02_full.fits',
@@ -148,7 +149,6 @@ def cuda_circle(v, width, N, types):
 
     mask = define_mask(types, N)
     v[mask] = hp.UNSEEN
-    minimum = 1000000
     for t, p in itertools.product(T, P):
         for r, r_in in zip(radius, radius_in):
 
@@ -163,7 +163,7 @@ def cuda_circle(v, width, N, types):
                 # angular distance from center to pixels
                 distance = angular_distance(hp.ang2vec(np.pi/2-t, p),
                                             pixels)
-                if len(distance) < minimum: minimum = len(distance)
+
                 # Compute slopes and Pearson coefficients
                 grad, r_value = linearity(distance, temperature(inner, v))
 
@@ -173,7 +173,6 @@ def cuda_circle(v, width, N, types):
                 gradient.append(grad)
                 r_coeff.append(r_value)
                 coords.append([t, p])
-    print('min size ', minimum)
     # Store in a Data Frame and drop masked values
     d = store_data(radius_, coords, gradient, r_coeff)
     # Obtain CDFs from each family of rings to calculate A+, A-

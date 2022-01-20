@@ -1,7 +1,8 @@
 import numba
 from numba import vectorize
 import numpy as np
-
+N=8
+numba.set_num_threads(N)
 
 @numba.njit(fastmath=True)
 def temperature(inner, v):
